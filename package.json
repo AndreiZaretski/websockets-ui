@@ -4,8 +4,8 @@
     "description": "Template for the WebSocket remote control task",
     "main": "index.ts",
     "scripts": {
-        "start": "node ./index.ts",
-        "start:dev": "nodemon ./index.ts",
+        "start": "ts-node ./src/index.ts",
+        "start:dev": "nodemon ./src/index.ts",
         "start:prod": "webpack && node ./dist/index.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
@@ -35,6 +35,6 @@
         "webpack-cli": "^5.1.4"
     },
     "dependencies": {
-        "ws": "^8.8.0"
+        "ws": "^8.13.0"
     }
 }

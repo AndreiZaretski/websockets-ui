@@ -1,5 +1,5 @@
-import { httpServer } from './src/http_server/index';
-import { wss } from './src/ws-server';
+import { httpServer } from './http_server/index';
+import { wss } from './ws-server';
 import dotenv from 'dotenv';
 
 dotenv.config();
