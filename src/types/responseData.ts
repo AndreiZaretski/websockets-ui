@@ -12,3 +12,8 @@ interface ResponseUserInfo {
   name: string;
   index: number;
 }
+
+export interface CreateGame {
+  idGame: number;
+  idPlayer: number;
+}

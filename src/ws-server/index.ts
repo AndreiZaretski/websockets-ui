@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { parseData } from '../helpers/parseData';
 import { WSController } from './wsController';
 import WebSocketEx from '../types/websocketEx';
+import { wsClients } from '../data/userData';
 
 dotenv.config();
 
@@ -23,6 +24,11 @@ wss.on('connection', (ws: WebSocketEx) => {
 
     new WSController(ws, result).checkCommand();
     //broadcast(result.toString());
+  });
+
+  ws.on('close', () => {
+    wsClients.delete(ws);
+    console.log(`User with id ${ws.id} and ${ws.indexSocket} was closed`);
   });
 });
 

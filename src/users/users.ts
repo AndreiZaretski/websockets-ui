@@ -1,9 +1,11 @@
 import { IncomingUser } from '../types/incomingData';
-import { userDB } from './userDB';
+import { userDB, wsClients } from '../data/userData';
 import { CommandGame } from '../types/command';
 import WebSocketEx from '../types/websocketEx';
 
-export const wsClients = new Set<WebSocketEx>();
+// export const wsClients = new Set<WebSocketEx>();
+
+let indexSocket = 0;
 
 export const registerUsers = (ws: WebSocketEx, data: IncomingUser) => {
   const { name, password } = data;
@@ -26,6 +28,8 @@ export const registerUsers = (ws: WebSocketEx, data: IncomingUser) => {
   } else if (findUser && findUser.password === password) {
     res.data = JSON.stringify({ name: name, index: findUser.index, error: false, errorText: '' });
     ws.id = findUser.index;
+    ws.indexSocket = indexSocket;
+    indexSocket++;
     wsClients.add(ws);
   } else {
     const newUser = addUser(name, password);
@@ -33,6 +37,8 @@ export const registerUsers = (ws: WebSocketEx, data: IncomingUser) => {
     res.data = JSON.stringify({ name: name, index: newUser.index, error: false, errorText: '' });
 
     ws.id = newUser.index;
+    ws.indexSocket = indexSocket;
+    indexSocket++;
   }
   ws.send(JSON.stringify(res));
 };

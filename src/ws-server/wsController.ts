@@ -1,30 +1,42 @@
-import { IncomingData, IncomingUser } from '../types/incomingData';
+import { IncomingData, IncomingRoom, IncomingUser } from '../types/incomingData';
 import { registerUsers } from '../users/users';
 import { CommandGame } from '../types/command';
 import WebSocketEx from '../types/websocketEx';
 import { RoomsController } from '../room/rooms';
+//import { userDB } from '../data/userData';
+//import { rooms } from '../room/rooms';
 
 export class WSController {
-  message!: IncomingData;
-  data: IncomingUser;
+  message: IncomingData;
+  data: IncomingUser | IncomingRoom;
   ws: WebSocketEx;
+  roomsController: RoomsController;
 
   constructor(ws: WebSocketEx, message: IncomingData) {
     this.message = message;
-    this.data = this.message.data as IncomingUser;
+    this.data = this.message.data;
     this.ws = ws;
+    this.roomsController = new RoomsController(this.ws);
   }
 
   checkCommand() {
     switch (this.message.type) {
       case CommandGame.Reg:
-        registerUsers(this.ws, this.data);
-        new RoomsController(this.ws).updateCurrentRoom();
+        //if (this.data instanceof IncomingUser) {}
+        registerUsers(this.ws, this.data as IncomingUser);
+        this.roomsController.updateCurrentRoom();
+
         break;
 
       case CommandGame.CreateRoom:
-        console.log('Room %s', this.data, this.ws.id);
-        new RoomsController(this.ws).updateRoom();
+        //console.log('Room %s', this.data, this.ws.id);
+        this.roomsController.updateRoom();
+        break;
+
+      case CommandGame.AddUserToRoom:
+        //console.log('add user', this.ws.id, this.data, userDB);
+        this.roomsController.createGame(this.data as IncomingRoom);
+        this.roomsController.updateCurrentRoom();
         break;
     }
   }
