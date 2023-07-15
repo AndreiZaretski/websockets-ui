@@ -1,22 +1,25 @@
-import { IncomingData, IncomingRoom, IncomingUser } from '../types/incomingData';
+import { IncomingData, IncomingRoom, IncomingUser, UserShips } from '../types/incomingData';
 import { registerUsers } from '../users/users';
 import { CommandGame } from '../types/command';
 import WebSocketEx from '../types/websocketEx';
 import { RoomsController } from '../room/rooms';
+import { GameConntroller } from '../game/gameController';
 //import { userDB } from '../data/userData';
 //import { rooms } from '../room/rooms';
 
 export class WSController {
   message: IncomingData;
-  data: IncomingUser | IncomingRoom;
+  data: IncomingUser | IncomingRoom | UserShips;
   ws: WebSocketEx;
   roomsController: RoomsController;
+  gameController: GameConntroller;
 
   constructor(ws: WebSocketEx, message: IncomingData) {
     this.message = message;
     this.data = this.message.data;
     this.ws = ws;
     this.roomsController = new RoomsController(this.ws);
+    this.gameController = new GameConntroller(this.ws);
   }
 
   checkCommand() {
@@ -38,6 +41,10 @@ export class WSController {
         this.roomsController.createGame(this.data as IncomingRoom);
         this.roomsController.updateCurrentRoom();
         break;
+
+      case CommandGame.AddShips:
+        this.gameController.startGame(this.data as UserShips);
+        console.log('game');
     }
   }
 }

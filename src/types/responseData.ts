@@ -1,3 +1,5 @@
+import { ShipsCoord } from './incomingData';
+
 export interface ResponseUser extends ResponseUserInfo {
   error: boolean;
   errorText: string;
@@ -5,6 +7,7 @@ export interface ResponseUser extends ResponseUserInfo {
 
 export interface RoomGame {
   roomId: number;
+  indexSocket: number;
   roomUsers: ResponseUserInfo[];
 }
 
@@ -16,4 +19,9 @@ interface ResponseUserInfo {
 export interface CreateGame {
   idGame: number;
   idPlayer: number;
+}
+
+export interface StartGameData {
+  ships: ShipsCoord[];
+  currentPlayerIndex: number;
 }

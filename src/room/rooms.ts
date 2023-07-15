@@ -19,12 +19,13 @@ export class RoomsController {
   }
 
   private createRoom() {
-    if (typeof this.ws.id === 'number') {
+    if (typeof this.ws.id === 'number' && typeof this.ws.indexSocket === 'number') {
       if (this.checkUserRooms() || this.checkUserGame()) {
         return undefined;
       }
       const newRoom = {
         roomId: roomId,
+        indexSocket: this.ws.indexSocket,
         roomUsers: [
           {
             name: userDB[this.ws.id].name,
@@ -40,7 +41,7 @@ export class RoomsController {
 
   createGame(data: IncomingRoom) {
     const searchRoom = rooms.find((room) => room.roomId === data.indexRoom);
-    if (searchRoom && typeof this.ws.id === 'number') {
+    if (searchRoom && typeof this.ws.id === 'number' && typeof this.ws.indexSocket === 'number') {
       if (this.ws.id === searchRoom.roomUsers[0].index || this.checkUserGame()) {
         return;
       }
@@ -49,27 +50,36 @@ export class RoomsController {
         players: [
           {
             idPlayer: this.ws.id,
+            indexSocket: this.ws.indexSocket,
+            shipInfo: [],
+            shipsCoord: [],
+            checkWin: 0,
           },
           {
             idPlayer: searchRoom.roomUsers[0].index,
+            indexSocket: searchRoom.indexSocket,
+            shipInfo: [],
+            shipsCoord: [],
+            checkWin: 0,
           },
         ],
       };
 
-      games.push(newGame);
+      //games.push(newGame);
+      games.set(newGame.idGame, newGame);
       this.deleteRoom(data.indexRoom);
       this.deleteRoomByUserId(this.ws.id);
       // Maybe write new metho for send fo one socket
       this.sendCreateGame(idGame, this.ws.id);
-      this.sendCreateGame(idGame, searchRoom.roomUsers[0].index);
+      this.sendCreateGame(idGame, searchRoom.roomUsers[0].index, searchRoom.indexSocket);
       idGame++;
     }
   }
 
-  private sendCreateGame(idGame: number, idPlayer: number) {
+  private sendCreateGame(idGame: number, idPlayer: number, indexSocket?: number) {
     const wsClientsArray = Array.from(wsClients);
 
-    const filteredClientArray = wsClientsArray.filter((ws) => ws.id === idPlayer);
+    const findClient = idPlayer !== this.ws.id ? wsClientsArray.find((ws) => ws.indexSocket === indexSocket) : this.ws;
 
     const sendData = {
       idGame: idGame,
@@ -82,9 +92,10 @@ export class RoomsController {
       id: 0,
     };
 
-    filteredClientArray.forEach((client) => {
-      client.send(JSON.stringify(res));
-    });
+    findClient?.send(JSON.stringify(res));
+    // .forEach((client) => {
+    //   client.send(JSON.stringify(res));
+    // });
   }
 
   private deleteRoom(idRoom: number) {
@@ -108,9 +119,16 @@ export class RoomsController {
     const room = this.createRoom();
 
     if (room) {
+      //const { indexSocket, ...rest } = room;
       const res = {
         type: CommandGame.UpdateRoom,
-        data: JSON.stringify(room),
+        data: JSON.stringify(
+          room.map((room) => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { indexSocket, ...rest } = room;
+            return rest;
+          }),
+        ),
         id: 0,
       };
       wsClients.forEach((client) => {
@@ -122,7 +140,13 @@ export class RoomsController {
   updateCurrentRoom() {
     const res = {
       type: CommandGame.UpdateRoom,
-      data: JSON.stringify(rooms),
+      data: JSON.stringify(
+        rooms.map((room) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { indexSocket, ...rest } = room;
+          return rest;
+        }),
+      ),
       id: 0,
     };
     wsClients.forEach((client) => {
@@ -141,7 +165,8 @@ export class RoomsController {
   }
 
   private checkUserGame() {
-    const checkRoom = games.find((room) => {
+    const gamesArray = Array.from(games.values());
+    const checkRoom = gamesArray.find((room) => {
       return room.players.some((user) => this.ws.id === user.idPlayer);
     });
     if (checkRoom) {
