@@ -1,4 +1,4 @@
-import { IncomingData, IncomingRoom, IncomingUser, UserShips } from '../types/incomingData';
+import { AttackUser, IncomingData, IncomingRoom, IncomingUser, RandomAttack, UserShips } from '../types/incomingData';
 import { registerUsers } from '../users/users';
 import { CommandGame } from '../types/command';
 import WebSocketEx from '../types/websocketEx';
@@ -9,7 +9,7 @@ import { GameConntroller } from '../game/gameController';
 
 export class WSController {
   message: IncomingData;
-  data: IncomingUser | IncomingRoom | UserShips;
+  data: IncomingUser | IncomingRoom | UserShips | AttackUser | RandomAttack;
   ws: WebSocketEx;
   roomsController: RoomsController;
   gameController: GameConntroller;
@@ -28,6 +28,7 @@ export class WSController {
         //if (this.data instanceof IncomingUser) {}
         registerUsers(this.ws, this.data as IncomingUser);
         this.roomsController.updateCurrentRoom();
+        this.roomsController.updateWinners();
 
         break;
 
@@ -44,7 +45,15 @@ export class WSController {
 
       case CommandGame.AddShips:
         this.gameController.startGame(this.data as UserShips);
-        console.log('game');
+        break;
+
+      case CommandGame.Attack:
+        this.gameController.attackControl(this.data as AttackUser);
+        break;
+
+      case CommandGame.RundomAttack:
+        this.gameController.getRandomAttack(this.data as RandomAttack);
+        break;
     }
   }
 }

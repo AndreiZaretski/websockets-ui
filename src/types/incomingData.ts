@@ -1,6 +1,6 @@
 export interface IncomingData {
   type: string;
-  data: IncomingUser | IncomingRoom | UserShips;
+  data: IncomingUser | IncomingRoom | UserShips | AttackUser | RandomAttack;
   id: 0;
 }
 
@@ -27,4 +27,16 @@ export interface ShipsCoord {
   direction: boolean;
   length: number;
   type: 'small' | 'medium' | 'large' | 'huge';
+}
+
+export interface AttackUser {
+  gameId: number;
+  x: number;
+  y: number;
+  indexPlayer: number;
+}
+
+export interface RandomAttack {
+  gameId: number;
+  indexPlayer: number;
 }

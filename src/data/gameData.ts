@@ -1,7 +1,9 @@
-import { RoomGame } from '../types/responseData';
+import { RoomGame, Winner } from '../types/responseData';
 import { GameInfo } from '../types/types';
 
 //export const games: GameInfo[] = [];
 export const games: Map<number, GameInfo> = new Map();
 
 export const rooms: RoomGame[] = [];
+
+export const winners: Winner[] = [];

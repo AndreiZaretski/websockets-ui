@@ -1,3 +1,4 @@
+import { StatusAttack } from './command';
 import { ShipsCoord } from './incomingData';
 
 export interface ResponseUser extends ResponseUserInfo {
@@ -24,4 +25,22 @@ export interface CreateGame {
 export interface StartGameData {
   ships: ShipsCoord[];
   currentPlayerIndex: number;
+}
+
+export interface AttackStatus {
+  position: {
+    x: number;
+    y: number;
+  };
+  currentPlayer: number;
+  status: StatusAttack;
+}
+
+export interface Winner {
+  name: string;
+  wins: number;
+}
+
+export interface WinnerId {
+  winPlayer: number;
 }

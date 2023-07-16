@@ -13,3 +13,9 @@ export enum CommandGame {
   Finish = 'finish',
   SinglePlay = 'single_play',
 }
+
+export enum StatusAttack {
+  Miss = 'miss',
+  Killed = 'killed',
+  Shot = 'shot',
+}

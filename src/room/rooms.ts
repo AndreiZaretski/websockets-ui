@@ -1,4 +1,4 @@
-import { games, rooms } from '../data/gameData';
+import { games, rooms, winners } from '../data/gameData';
 import { CommandGame } from '../types/command';
 import { IncomingRoom } from '../types/incomingData';
 //import { RoomGame } from '../types/responseData';
@@ -49,17 +49,21 @@ export class RoomsController {
         idGame: idGame,
         players: [
           {
-            idPlayer: this.ws.id,
+            idPlayer: 0,
+            idUser: this.ws.id,
             indexSocket: this.ws.indexSocket,
             shipInfo: [],
             shipsCoord: [],
+            isGoes: true,
             checkWin: 0,
           },
           {
-            idPlayer: searchRoom.roomUsers[0].index,
+            idPlayer: 1,
+            idUser: searchRoom.roomUsers[0].index,
             indexSocket: searchRoom.indexSocket,
             shipInfo: [],
             shipsCoord: [],
+            isGoes: false,
             checkWin: 0,
           },
         ],
@@ -70,16 +74,16 @@ export class RoomsController {
       this.deleteRoom(data.indexRoom);
       this.deleteRoomByUserId(this.ws.id);
       // Maybe write new metho for send fo one socket
-      this.sendCreateGame(idGame, this.ws.id);
-      this.sendCreateGame(idGame, searchRoom.roomUsers[0].index, searchRoom.indexSocket);
+      this.sendCreateGame(idGame, this.ws.id, newGame.players[0].idPlayer);
+      this.sendCreateGame(idGame, searchRoom.roomUsers[0].index, newGame.players[1].idPlayer, searchRoom.indexSocket);
       idGame++;
     }
   }
 
-  private sendCreateGame(idGame: number, idPlayer: number, indexSocket?: number) {
+  private sendCreateGame(idGame: number, idUser: number, idPlayer: number, indexSocket?: number) {
     const wsClientsArray = Array.from(wsClients);
 
-    const findClient = idPlayer !== this.ws.id ? wsClientsArray.find((ws) => ws.indexSocket === indexSocket) : this.ws;
+    const findClient = idUser !== this.ws.id ? wsClientsArray.find((ws) => ws.indexSocket === indexSocket) : this.ws;
 
     const sendData = {
       idGame: idGame,
@@ -147,6 +151,17 @@ export class RoomsController {
           return rest;
         }),
       ),
+      id: 0,
+    };
+    wsClients.forEach((client) => {
+      client.send(JSON.stringify(res));
+    });
+  }
+
+  updateWinners() {
+    const res = {
+      type: CommandGame.UpdateWin,
+      data: JSON.stringify(winners),
       id: 0,
     };
     wsClients.forEach((client) => {

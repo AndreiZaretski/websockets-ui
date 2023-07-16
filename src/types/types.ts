@@ -13,8 +13,15 @@ export interface GameInfo {
 
 interface PlayerInfo {
   idPlayer: number;
+  idUser: number;
   indexSocket: number;
   shipInfo: Array<number[]>;
   shipsCoord: ShipsCoord[];
+  isGoes: boolean;
   checkWin: number;
+}
+
+export interface Coordinate {
+  x: number;
+  y: number;
 }
