@@ -128,6 +128,26 @@ export class GameConntroller {
     }
   }
 
+  isPlayerExit(indexSocket: number) {
+    const arrayFromGames = Array.from(games.values());
+    const currentGame = arrayFromGames.find((game) =>
+      game.players.some((player) => player.indexSocket === indexSocket),
+    );
+
+    if (currentGame) {
+      const indexExitPlayer = currentGame.players.findIndex((player) => player.indexSocket === indexSocket);
+
+      if (indexExitPlayer !== -1) {
+        this.updateWinners(currentGame.idGame, currentGame.players[1 - indexExitPlayer].idUser);
+
+        this.sendFinishGame(
+          currentGame.players[1 - indexExitPlayer].indexSocket,
+          currentGame.players[1 - indexExitPlayer].idPlayer,
+        );
+      }
+    }
+  }
+
   private finishGame(numberShot: number, idUser: number, idGame: number) {
     const isWin = this.gameService.checkWin(numberShot);
 
@@ -136,27 +156,50 @@ export class GameConntroller {
     }
 
     if (isWin) {
-      const nameUser = userDB[idUser].name;
+      this.updateWinners(idGame, idUser);
+      // const nameUser = userDB[idUser].name;
 
-      const checkWinners = winners.find((winner) => winner.name === nameUser);
-      if (checkWinners) {
-        checkWinners.wins += 1;
-      }
-      if (!checkWinners) {
-        winners.push({ name: nameUser, wins: 1 });
-      }
-      wsClients.forEach((client) => {
-        client.send(
-          JSON.stringify({
-            type: CommandGame.UpdateWin,
-            data: JSON.stringify(winners),
-            id: 0,
-          }),
-        );
-      });
-      games.delete(idGame);
+      // const checkWinners = winners.find((winner) => winner.name === nameUser);
+      // if (checkWinners) {
+      //   checkWinners.wins += 1;
+      // }
+      // if (!checkWinners) {
+      //   winners.push({ name: nameUser, wins: 1 });
+      // }
+      // wsClients.forEach((client) => {
+      //   client.send(
+      //     JSON.stringify({
+      //       type: CommandGame.UpdateWin,
+      //       data: JSON.stringify(winners),
+      //       id: 0,
+      //     }),
+      //   );
+      // });
+      // games.delete(idGame);
     }
     return true;
+  }
+
+  private updateWinners(idGame: number, idUser: number) {
+    const nameUser = userDB[idUser].name;
+
+    const checkWinners = winners.find((winner) => winner.name === nameUser);
+    if (checkWinners) {
+      checkWinners.wins += 1;
+    }
+    if (!checkWinners) {
+      winners.push({ name: nameUser, wins: 1 });
+    }
+    wsClients.forEach((client) => {
+      client.send(
+        JSON.stringify({
+          type: CommandGame.UpdateWin,
+          data: JSON.stringify(winners),
+          id: 0,
+        }),
+      );
+    });
+    games.delete(idGame);
   }
 
   private sendFinishGame(indexSocket: number, idPlayer: number) {

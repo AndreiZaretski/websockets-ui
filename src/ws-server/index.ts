@@ -4,6 +4,9 @@ import { parseData } from '../helpers/parseData';
 import { WSController } from './wsController';
 import WebSocketEx from '../types/websocketEx';
 import { wsClients } from '../data/userData';
+import { GameConntroller } from '../game/gameController';
+import { rooms } from '../data/gameData';
+import { RoomsController } from '../room/rooms';
 
 dotenv.config();
 
@@ -18,27 +21,31 @@ wss.on('connection', (ws: WebSocketEx) => {
   ws.on('message', (data) => {
     console.log('received: %s', data);
 
-    //console.log('Parsing string: ' + data);
-
     const result = parseData(data.toString());
 
     new WSController(ws, result).checkCommand();
-    //broadcast(result.toString());
   });
 
   ws.on('close', () => {
+    if (ws.indexSocket !== undefined) {
+      new GameConntroller(ws).isPlayerExit(ws.indexSocket);
+
+      const searchIndexRoom = rooms.findIndex((user) => {
+        return user.indexSocket === ws.indexSocket;
+      });
+      //console.log('this index', searchIndexRoom);
+      if (searchIndexRoom !== -1) {
+        rooms.splice(searchIndexRoom, 1);
+
+        new RoomsController(ws).updateCurrentRoom();
+      }
+    }
     wsClients.delete(ws);
     console.log(`User with id ${ws.id} and ${ws.indexSocket} was closed`);
   });
 });
 
 wss.on('listening', () => {
-  console.log(`WebSocket server work on port ${WS_Port}`);
+  const adress = wss.address();
+  console.log(`WebSocket server work on port ${WS_Port} and ${adress}`);
 });
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-const broadcast = (result: any) => {
-  wss.clients.forEach((client) => {
-    client.send(JSON.stringify(result));
-  });
-};
