@@ -26,7 +26,7 @@ export class WSController {
         registerUsers(this.ws, this.data as IncomingUser);
         this.roomsController.updateCurrentRoom();
         this.roomsController.updateWinners();
-        console.log('User registerd');
+        console.log('User registered');
 
         break;
 
