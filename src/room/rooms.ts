@@ -1,21 +1,22 @@
 import { games, rooms, winners } from '../data/gameData';
 import { CommandGame } from '../types/command';
 import { IncomingRoom } from '../types/incomingData';
-//import { RoomGame } from '../types/responseData';
 import WebSocketEx from '../types/websocketEx';
 import { userDB, wsClients } from '../data/userData';
 import { GameInfo } from '../types/types';
-//import { wsClients } from '../users/users';
+import { shippForBot } from '../data/shipsForBot';
+import { GameService } from '../game/gameService';
 
-//const games = [];
 let roomId = 0;
-let idGame = 0;
+export let idGame = 0;
 
 export class RoomsController {
   ws: WebSocketEx;
+  gameService: GameService;
 
   constructor(ws: WebSocketEx) {
     this.ws = ws;
+    this.gameService = new GameService();
   }
 
   private createRoom() {
@@ -69,13 +70,49 @@ export class RoomsController {
         ],
       };
 
-      //games.push(newGame);
       games.set(newGame.idGame, newGame);
       this.deleteRoom(data.indexRoom);
       this.deleteRoomByUserId(this.ws.id);
-      // Maybe write new metho for send fo one socket
       this.sendCreateGame(idGame, this.ws.id, newGame.players[0].idPlayer);
       this.sendCreateGame(idGame, searchRoom.roomUsers[0].index, newGame.players[1].idPlayer, searchRoom.indexSocket);
+      idGame++;
+    }
+  }
+
+  createGameWithBot() {
+    if (typeof this.ws.id === 'number' && typeof this.ws.indexSocket === 'number') {
+      if (this.checkUserGame()) {
+        return;
+      }
+      const shipsBot = shippForBot[Math.floor(Math.random() * shippForBot.length)];
+      const newGame: GameInfo = {
+        idGame: idGame,
+        isbot: true,
+        players: [
+          {
+            idPlayer: 0,
+            idUser: this.ws.id,
+            indexSocket: this.ws.indexSocket,
+            shipInfo: [],
+            shipsCoord: [],
+            isGoes: true,
+            checkWin: 0,
+          },
+          {
+            idPlayer: 1,
+            idUser: -1,
+            indexSocket: -1,
+            shipInfo: this.gameService.addShips(shipsBot),
+            shipsCoord: shipsBot,
+            isGoes: false,
+            checkWin: 0,
+          },
+        ],
+      };
+
+      games.set(newGame.idGame, newGame);
+      this.deleteRoomByUserId(this.ws.id);
+      this.sendCreateGame(idGame, this.ws.id, newGame.players[0].idPlayer);
       idGame++;
     }
   }
@@ -97,9 +134,6 @@ export class RoomsController {
     };
 
     findClient?.send(JSON.stringify(res));
-    // .forEach((client) => {
-    //   client.send(JSON.stringify(res));
-    // });
   }
 
   private deleteRoom(idRoom: number) {
@@ -123,7 +157,6 @@ export class RoomsController {
     const room = this.createRoom();
 
     if (room) {
-      //const { indexSocket, ...rest } = room;
       const res = {
         type: CommandGame.UpdateRoom,
         data: JSON.stringify(
@@ -190,9 +223,3 @@ export class RoomsController {
     return false;
   }
 }
-
-// const roomUsers = [];
-// roomUsers.push({
-//   name: userDB[this.ws.id].name,
-//   index: this.ws.id,
-// });

@@ -5,6 +5,7 @@ import { AttackUser, RandomAttack, ShipsCoord, UserShips } from '../types/incomi
 import { AttackStatus, StartGameData, WinnerId } from '../types/responseData';
 import { userDB, wsClients } from '../data/userData';
 import { CommandGame, StatusAttack } from '../types/command';
+import { GameInfo } from '../types/types';
 
 export class GameConntroller {
   ws: WebSocketEx;
@@ -18,9 +19,9 @@ export class GameConntroller {
   startGame(data: UserShips) {
     const currentGame = games.get(data.gameId);
 
-    const userGameArray = this.gameService.addShips(data);
+    const userGameArray = this.gameService.addShips(data.ships);
     const findUser = currentGame?.players[data.indexPlayer];
-    //.find((user) => user.idPlayer === data.indexPlayer);
+
     if (findUser && currentGame) {
       findUser.shipInfo = userGameArray;
 
@@ -43,7 +44,6 @@ export class GameConntroller {
         currentGame?.players[1 - attackInfo.indexPlayer].shipInfo,
       );
 
-      //console.log(result);
       if (result === StatusAttack.Miss) {
         currentGame?.players.forEach((user) => {
           this.sendStatus(user.indexSocket, StatusAttack.Miss, attackInfo);
@@ -51,6 +51,8 @@ export class GameConntroller {
         });
         currentGame.players[attackInfo.indexPlayer].isGoes = false;
         currentGame.players[1 - attackInfo.indexPlayer].isGoes = true;
+
+        this.getBotAttack(currentGame, attackInfo.indexPlayer === 0);
       }
 
       if (typeof result === 'number') {
@@ -62,6 +64,8 @@ export class GameConntroller {
         });
         currentGame.players[attackInfo.indexPlayer].isGoes = false;
         currentGame.players[1 - attackInfo.indexPlayer].isGoes = true;
+
+        this.getBotAttack(currentGame, attackInfo.indexPlayer === 0);
       }
       if (result === StatusAttack.Shot) {
         currentGame?.players.forEach((user) => {
@@ -69,6 +73,8 @@ export class GameConntroller {
           this.sendTurn(user.indexSocket, currentGame.players[attackInfo.indexPlayer].idPlayer);
         });
         currentGame.players[attackInfo.indexPlayer].checkWin += 1;
+
+        this.getBotAttack(currentGame, attackInfo.indexPlayer === 1);
       }
 
       if (result === StatusAttack.Killed) {
@@ -101,10 +107,21 @@ export class GameConntroller {
         if (checkWin) {
           currentGame?.players.forEach((user) => {
             this.sendFinishGame(user.indexSocket, currentGame.players[attackInfo.indexPlayer].idPlayer);
-            //this.sendTurn(user.indexSocket, currentGame.players[attackInfo.indexPlayer].idPlayer);
           });
         }
+
+        this.getBotAttack(currentGame, attackInfo.indexPlayer === 1);
       }
+    }
+  }
+
+  private getBotAttack(currentGame: GameInfo, isIndex: boolean) {
+    if (currentGame.isbot && isIndex) {
+      const randomAttack: RandomAttack = {
+        gameId: currentGame.idGame,
+        indexPlayer: 1,
+      };
+      setTimeout(() => this.getRandomAttack(randomAttack), 1000);
     }
   }
 
@@ -113,7 +130,7 @@ export class GameConntroller {
 
     if (currentGame) {
       const randomCoord = this.gameService.getRandomCoordinate(
-        currentGame.players[randomAttackInfo.indexPlayer].shipInfo,
+        currentGame.players[1 - randomAttackInfo.indexPlayer].shipInfo,
       );
       if (randomCoord) {
         const attackInfo: AttackUser = {
@@ -157,31 +174,19 @@ export class GameConntroller {
 
     if (isWin) {
       this.updateWinners(idGame, idUser);
-      // const nameUser = userDB[idUser].name;
-
-      // const checkWinners = winners.find((winner) => winner.name === nameUser);
-      // if (checkWinners) {
-      //   checkWinners.wins += 1;
-      // }
-      // if (!checkWinners) {
-      //   winners.push({ name: nameUser, wins: 1 });
-      // }
-      // wsClients.forEach((client) => {
-      //   client.send(
-      //     JSON.stringify({
-      //       type: CommandGame.UpdateWin,
-      //       data: JSON.stringify(winners),
-      //       id: 0,
-      //     }),
-      //   );
-      // });
-      // games.delete(idGame);
     }
     return true;
   }
 
   private updateWinners(idGame: number, idUser: number) {
-    const nameUser = userDB[idUser].name;
+    const checkDb = userDB[idUser];
+    let nameUser: string;
+
+    if (!checkDb) {
+      nameUser = 'Bot';
+    } else {
+      nameUser = checkDb.name;
+    }
 
     const checkWinners = winners.find((winner) => winner.name === nameUser);
     if (checkWinners) {

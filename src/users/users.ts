@@ -3,8 +3,6 @@ import { userDB, wsClients } from '../data/userData';
 import { CommandGame } from '../types/command';
 import WebSocketEx from '../types/websocketEx';
 
-// export const wsClients = new Set<WebSocketEx>();
-
 let indexSocket = 0;
 
 export const registerUsers = (ws: WebSocketEx, data: IncomingUser) => {
@@ -17,7 +15,7 @@ export const registerUsers = (ws: WebSocketEx, data: IncomingUser) => {
   };
   const findUser = userDB.find((elem) => elem.name === name);
 
-  if (!name || !password) {
+  if (!name || !password || name.length < 5 || password.length < 5) {
     res.data = JSON.stringify({
       ...data,
       error: true,

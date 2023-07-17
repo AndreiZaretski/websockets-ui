@@ -1,13 +1,13 @@
 import { StatusAttack } from '../types/command';
-import { UserShips } from '../types/incomingData';
+import { ShipsCoord } from '../types/incomingData';
 import { Coordinate } from '../types/types';
 
 export class GameService {
-  addShips(ships: UserShips) {
+  addShips(ships: ShipsCoord[]) {
     const board: Array<number[]> = Array(10)
       .fill(0)
       .map(() => Array(10).fill(0));
-    for (const ship of ships.ships) {
+    for (const ship of ships) {
       const x = ship.position.x;
       const y = ship.position.y;
 
@@ -106,8 +106,15 @@ export class GameService {
 
     for (let y = 0; y < 10; y++) {
       for (let x = 0; x < 10; x++) {
-        if (board[y][x] >= 0) {
+        if (board[y][x] > 0) {
           free.push({ x, y });
+        }
+
+        if (board[y][x] === 0) {
+          const random = Math.random();
+          if (random <= 0.6) {
+            free.push({ x, y });
+          }
         }
       }
     }

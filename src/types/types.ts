@@ -8,6 +8,7 @@ export interface User {
 
 export interface GameInfo {
   idGame: number;
+  isbot?: true;
   players: PlayerInfo[];
 }
 

@@ -4,8 +4,6 @@ import { CommandGame } from '../types/command';
 import WebSocketEx from '../types/websocketEx';
 import { RoomsController } from '../room/rooms';
 import { GameConntroller } from '../game/gameController';
-//import { userDB } from '../data/userData';
-//import { rooms } from '../room/rooms';
 
 export class WSController {
   message: IncomingData;
@@ -25,7 +23,6 @@ export class WSController {
   checkCommand() {
     switch (this.message.type) {
       case CommandGame.Reg:
-        //if (this.data instanceof IncomingUser) {}
         registerUsers(this.ws, this.data as IncomingUser);
         this.roomsController.updateCurrentRoom();
         this.roomsController.updateWinners();
@@ -33,12 +30,10 @@ export class WSController {
         break;
 
       case CommandGame.CreateRoom:
-        //console.log('Room %s', this.data, this.ws.id);
         this.roomsController.updateRoom();
         break;
 
       case CommandGame.AddUserToRoom:
-        //console.log('add user', this.ws.id, this.data, userDB);
         this.roomsController.createGame(this.data as IncomingRoom);
         this.roomsController.updateCurrentRoom();
         break;
@@ -53,6 +48,15 @@ export class WSController {
 
       case CommandGame.RundomAttack:
         this.gameController.getRandomAttack(this.data as RandomAttack);
+        break;
+
+      case CommandGame.SinglePlay:
+        this.roomsController.createGameWithBot();
+        this.roomsController.updateCurrentRoom();
+        break;
+
+      default:
+        console.error('Invalid message type');
         break;
     }
   }
